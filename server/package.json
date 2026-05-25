@@ -1,0 +1,26 @@
+{
+  "name": "api-curl-server",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.0",
+    "node-fetch": "^2.7.0",
+    "shell-quote": "^1.8.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "@types/node-fetch": "^2.6.11",
+    "@types/shell-quote": "^1.7.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}
