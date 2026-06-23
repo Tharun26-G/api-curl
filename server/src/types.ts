@@ -12,6 +12,22 @@ export type TestCategory =
   | 'special-characters'
   | 'custom';
 
+export type AssertionSeverity = 'critical' | 'warning';
+
+export interface AssertionRule {
+  expectStatus?: number;
+  expectStatusClass?: ('2xx' | '3xx' | '4xx' | '5xx')[];
+  disallowStatus?: number[];
+  maxResponseTimeMs?: number;
+  bodyContains?: string[];
+  bodyNotContains?: string[];
+  contentTypeStartsWith?: string;
+  jsonPathExists?: string[];
+  jsonPathEquals?: { path: string; value: unknown }[];
+  expectHeaders?: { name: string; value?: string }[];
+  expectJson?: boolean;
+}
+
 export interface TestCase {
   id: string;
   name: string;
@@ -25,6 +41,7 @@ export interface TestCase {
   description?: string;
   stepsToReproduce?: string[];
   expectedResult?: string;
+  assertions?: AssertionRule;
 }
 
 export interface RequestSpec {
@@ -44,6 +61,15 @@ export interface ResponseData {
   error?: string;
 }
 
+export interface Assertion {
+  name: string;
+  passed: boolean;
+  expected: string;
+  actual: string;
+  severity: AssertionSeverity;
+  message?: string;
+}
+
 export interface TestResult {
   testCase: TestCase;
   status: number;
@@ -54,6 +80,8 @@ export interface TestResult {
   size: number;
   passed: boolean;
   error?: string;
+  assertions: Assertion[];
+  failureSummary?: string;
 }
 
 export interface OllamaConfig {

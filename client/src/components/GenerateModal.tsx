@@ -51,40 +51,24 @@ export default function GenerateModal({ open, onClose, onGenerate, loading }: Pr
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <span className="label-mono">action / generate</span>
-            <h3>Compose your <em>AI test specimen</em></h3>
+            <h3>Generate test cases</h3>
+            <div className="sub">Choose how many cases to generate per category. The model fills in the rest.</div>
           </div>
           <button className="icon-btn" onClick={onClose}><I.X /></button>
         </div>
         <div className="modal-body">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ color: 'var(--mute-2)', fontSize: 12.5 }}>
-              Choose how many cases to generate per category. The model fills in the rest.
-            </span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button className="btn sm ghost" onClick={() => setAll(0)}>Clear</button>
-              <button className="btn sm ghost" onClick={() => setAll(1)}>Set all to 1</button>
-              <button className="btn sm ghost" onClick={() => setCounts(DEFAULTS)}>Reset</button>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 14, gap: 6 }}>
+            <button className="btn xs ghost" onClick={() => setAll(0)}>Clear</button>
+            <button className="btn xs ghost" onClick={() => setAll(1)}>Set all to 1</button>
+            <button className="btn xs ghost" onClick={() => setCounts(DEFAULTS)}>Reset</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
             {CATEGORIES.map(cat => (
-              <div
-                key={cat.key}
-                style={{
-                  border: '1px solid var(--rule)',
-                  padding: '10px 12px',
-                  background: 'var(--surface)',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr auto',
-                  gap: 10,
-                  alignItems: 'center',
-                }}
-              >
+              <div key={cat.key} className="gen-card">
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: 'var(--cream)', fontWeight: 500 }}>{cat.label}</div>
-                  <div style={{ fontSize: 11.5, color: 'var(--mute-2)' }}>{cat.hint}</div>
+                  <div className="title">{cat.label}</div>
+                  <div className="hint">{cat.hint}</div>
                 </div>
                 <input
                   type="number"
@@ -101,7 +85,7 @@ export default function GenerateModal({ open, onClose, onGenerate, loading }: Pr
           <div className="divider" />
 
           <div style={{ marginBottom: 8 }}>
-            <span className="label-mono">custom scenario (optional)</span>
+            <span className="label-mono">Custom scenario (optional)</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px', gap: 10 }}>
             <textarea
@@ -111,17 +95,18 @@ export default function GenerateModal({ open, onClose, onGenerate, loading }: Pr
               rows={3}
               style={{
                 padding: 10,
-                background: 'var(--ink)',
-                border: '1px solid var(--rule)',
+                background: 'var(--card-2)',
+                border: '1px solid var(--line)',
                 fontFamily: 'var(--mono)',
                 fontSize: 12.5,
-                color: 'var(--cream)',
+                color: 'var(--ink)',
                 resize: 'vertical',
+                borderRadius: 'var(--radius-xs)',
               }}
             />
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
               <div>
-                <div className="label-mono" style={{ marginBottom: 4 }}>custom count</div>
+                <div className="label-mono" style={{ marginBottom: 4 }}>Count</div>
                 <input
                   type="number"
                   className="count-input"
@@ -132,15 +117,15 @@ export default function GenerateModal({ open, onClose, onGenerate, loading }: Pr
                   style={{ width: '100%' }}
                 />
               </div>
-              <span style={{ fontSize: 10.5, color: 'var(--mute)', fontFamily: 'var(--mono)', letterSpacing: '0.1em' }}>
-                left blank → no custom cases
+              <span style={{ fontSize: 11, color: 'var(--mute)', fontFamily: 'var(--mono)' }}>
+                Leave blank for none
               </span>
             </div>
           </div>
         </div>
         <div className="modal-footer">
-          <span style={{ marginRight: 'auto', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            Total: <span style={{ color: 'var(--acid)' }}>{total}</span> cases
+          <span style={{ marginRight: 'auto', fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--mute)' }}>
+            Total: <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{total}</span> cases
           </span>
           <button className="btn" onClick={onClose}>Cancel</button>
           <button
@@ -148,7 +133,7 @@ export default function GenerateModal({ open, onClose, onGenerate, loading }: Pr
             disabled={loading || total === 0}
             onClick={() => onGenerate(counts, customPrompt, customCount)}
           >
-            {loading ? <span className="spinner" /> : <I.Sparkles />}
+            {loading ? <span className="spinner" /> : <I.Sparkles size={14} />}
             Generate {total} cases
           </button>
         </div>

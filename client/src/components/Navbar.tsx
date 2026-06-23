@@ -38,39 +38,36 @@ export default function Navbar({
     <div className="topbar">
       <div className="brand">
         <span className="mark">
-          API<em style={{ fontStyle: 'italic' }}>/</em>Workbench<span className="dot">.</span>
-        </span>
-        <span className="meta">
-          <span>vol. 01</span>
-          <span>edition / ai-tests</span>
+          <span className="glyph">A</span>
+          API Workbench
         </span>
       </div>
       <div className="actions">
         <button className="btn" onClick={onNewRequest} title="Start with a blank request">
-          <I.Plus /> New
+          <I.Plus size={14} /> New
         </button>
         <button className="btn" onClick={onImportCurl} title="Paste a cURL command">
-          <I.Import /> Import cURL
+          <I.Import size={14} /> Import cURL
         </button>
         <button className="btn primary" onClick={onGenerateCases} disabled={generating} title="Generate test cases with Ollama">
-          {generating ? <span className="spinner" /> : <I.Sparkles />}
+          {generating ? <span className="spinner" /> : <I.Sparkles size={14} />}
           Generate
         </button>
-        <button className="btn outline-acid" onClick={onRunAll} disabled={runningAll || testsCount === 0}>
-          {runningAll ? <span className="spinner" /> : <I.Play />}
+        <button className="btn" onClick={onRunAll} disabled={runningAll || testsCount === 0}>
+          {runningAll ? <span className="spinner" /> : <I.Play size={12} />}
           Run All <span className="kbd" style={{ marginLeft: 4 }}>{testsCount}</span>
         </button>
         <button className="btn ghost" onClick={onExportCsv} disabled={testsCount === 0} title="Export test cases as CSV">
-          <I.Download /> CSV
+          <I.Download size={14} /> CSV
         </button>
       </div>
       <div className="right-side">
-        <span className="label-mono">env</span>
+        <span className="label-mono">Env</span>
         <select
           className="btn"
           value={activeEnvId ?? ''}
           onChange={e => onSelectEnv(e.target.value || null)}
-          style={{ minWidth: 130, paddingRight: 26 }}
+          style={{ minWidth: 130 }}
           title="Active environment"
         >
           <option value="">No environment</option>
@@ -78,12 +75,12 @@ export default function Navbar({
             <option key={env.id} value={env.id}>{env.name}</option>
           ))}
         </select>
-        <span className="label-mono">model</span>
+        <span className="label-mono">Model</span>
         <select
           className="btn"
           value={selectedModel}
           onChange={e => onSelectModel(e.target.value)}
-          style={{ minWidth: 140, paddingRight: 26 }}
+          style={{ minWidth: 140 }}
           title="Ollama model"
         >
           {(models.length ? models : [selectedModel]).map(m => (

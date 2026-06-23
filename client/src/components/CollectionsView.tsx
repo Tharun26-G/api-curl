@@ -32,13 +32,24 @@ export default function CollectionsView({
 
   const current = collections.find(c => c.id === selected) || null;
 
+  const inputStyle: React.CSSProperties = {
+    flex: 1,
+    padding: '8px 12px',
+    background: 'var(--card-2)',
+    border: '1px solid var(--line)',
+    fontFamily: 'var(--mono)',
+    fontSize: 12.5,
+    color: 'var(--ink)',
+    borderRadius: 'var(--radius-xs)',
+  };
+
   return (
-    <div className="card">
+    <div className="card has-divider">
       <div className="card-header">
         <h3>Collections</h3>
-        <span className="h-meta">{collections.length.toString().padStart(2, '0')} on file</span>
+        <span className="h-meta">{collections.length} on file</span>
       </div>
-      <div className="card-body">
+      <div className="card-body" style={{ paddingTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 280px) 1fr', gap: 16 }}>
           <div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -46,15 +57,7 @@ export default function CollectionsView({
                 placeholder="New collection name"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: '8px 10px',
-                  background: 'var(--ink)',
-                  border: '1px solid var(--rule)',
-                  fontFamily: 'var(--mono)',
-                  fontSize: 12.5,
-                  color: 'var(--cream)',
-                }}
+                style={inputStyle}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && newName.trim()) {
                     onCreate(newName.trim());
@@ -71,14 +74,14 @@ export default function CollectionsView({
                   }
                 }}
               >
-                <I.Plus /> Add
+                <I.Plus size={12} /> Add
               </button>
             </div>
 
             <div className="list">
               {collections.length === 0 ? (
                 <div className="empty-state" style={{ padding: 14 }}>
-                  <span className="label">no collections</span>
+                  <span className="label">No collections</span>
                   <span style={{ fontSize: 12.5 }}>Create one to organise requests.</span>
                 </div>
               ) : (
@@ -105,7 +108,7 @@ export default function CollectionsView({
                             setRenaming(null);
                           }
                         }}
-                        style={{ flex: 1, fontFamily: 'var(--mono)', color: 'var(--cream)' }}
+                        style={{ flex: 1, fontFamily: 'var(--mono)', color: 'var(--ink)' }}
                       />
                     ) : (
                       <span className="li-name">{col.name}</span>
@@ -144,29 +147,19 @@ export default function CollectionsView({
           <div>
             {!current ? (
               <div className="empty-state" style={{ paddingTop: 0 }}>
-                <span className="label">select a collection</span>
-                <div className="title">
-                  Save your <em>current request</em> into a collection for re-use.
-                </div>
+                <span className="label">Select a collection</span>
+                <div className="title">Save your current request into a collection for re-use.</div>
               </div>
             ) : (
               <>
                 <div style={{ marginBottom: 12 }}>
-                  <span className="label-mono">save current request → {current.name}</span>
+                  <span className="label-mono">Save current request → {current.name}</span>
                   <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                     <input
                       placeholder={`${currentRequest.method} ${currentRequest.url}`}
                       value={saveName}
                       onChange={e => setSaveName(e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '8px 10px',
-                        background: 'var(--ink)',
-                        border: '1px solid var(--rule)',
-                        fontFamily: 'var(--mono)',
-                        fontSize: 12.5,
-                        color: 'var(--cream)',
-                      }}
+                      style={inputStyle}
                     />
                     <button
                       className="btn primary sm"
@@ -176,7 +169,7 @@ export default function CollectionsView({
                         setSaveName('');
                       }}
                     >
-                      <I.Save /> Save
+                      <I.Save size={12} /> Save
                     </button>
                   </div>
                 </div>
@@ -184,8 +177,10 @@ export default function CollectionsView({
                 <div className="list">
                   {current.requests.length === 0 ? (
                     <div className="empty-state" style={{ padding: 14 }}>
-                      <span className="label">no saved requests</span>
-                      <span style={{ fontSize: 12.5 }}>Click <strong style={{ color: 'var(--cream)' }}>Save</strong> above to add the current request.</span>
+                      <span className="label">No saved requests</span>
+                      <span style={{ fontSize: 12.5 }}>
+                        Click <strong style={{ color: 'var(--ink)' }}>Save</strong> above to add the current request.
+                      </span>
                     </div>
                   ) : (
                     current.requests.map(req => (
@@ -197,9 +192,7 @@ export default function CollectionsView({
                       >
                         <span className={`method-pill ${req.method}`}>{req.method}</span>
                         <span className="li-name">{req.name}</span>
-                        <span className="li-meta">
-                          {new Date(req.updatedAt).toLocaleDateString()}
-                        </span>
+                        <span className="li-meta">{new Date(req.updatedAt).toLocaleDateString()}</span>
                         <div className="li-actions">
                           <button
                             className="icon-btn"

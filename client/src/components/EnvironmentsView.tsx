@@ -55,13 +55,24 @@ export default function EnvironmentsView({
     onUpdateVars(current.id, toMap(next));
   };
 
+  const inputStyle: React.CSSProperties = {
+    flex: 1,
+    padding: '8px 12px',
+    background: 'var(--card-2)',
+    border: '1px solid var(--line)',
+    fontFamily: 'var(--mono)',
+    fontSize: 12.5,
+    color: 'var(--ink)',
+    borderRadius: 'var(--radius-xs)',
+  };
+
   return (
-    <div className="card">
+    <div className="card has-divider">
       <div className="card-header">
         <h3>Environments &amp; Variables</h3>
-        <span className="h-meta">{environments.length.toString().padStart(2, '0')} defined</span>
+        <span className="h-meta">{environments.length} defined</span>
       </div>
-      <div className="card-body">
+      <div className="card-body" style={{ paddingTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 280px) 1fr', gap: 16 }}>
           <div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -69,15 +80,7 @@ export default function EnvironmentsView({
                 placeholder="New environment name"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: '8px 10px',
-                  background: 'var(--ink)',
-                  border: '1px solid var(--rule)',
-                  fontFamily: 'var(--mono)',
-                  fontSize: 12.5,
-                  color: 'var(--cream)',
-                }}
+                style={inputStyle}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && newName.trim()) {
                     onCreate(newName.trim());
@@ -94,15 +97,17 @@ export default function EnvironmentsView({
                   }
                 }}
               >
-                <I.Plus /> Add
+                <I.Plus size={12} /> Add
               </button>
             </div>
 
             <div className="list">
               {environments.length === 0 ? (
                 <div className="empty-state" style={{ padding: 14 }}>
-                  <span className="label">no environments</span>
-                  <span style={{ fontSize: 12.5 }}>Create one to inject <code style={{ color: 'var(--acid)' }}>{`{{vars}}`}</code> into URLs, headers, and bodies.</span>
+                  <span className="label">No environments</span>
+                  <span style={{ fontSize: 12.5 }}>
+                    Create one to inject <code style={{ fontFamily: 'var(--mono)', color: 'var(--ink)' }}>{`{{vars}}`}</code> into URLs, headers, and bodies.
+                  </span>
                 </div>
               ) : (
                 environments.map(env => {
@@ -130,7 +135,7 @@ export default function EnvironmentsView({
                               setRenaming(null);
                             }
                           }}
-                          style={{ flex: 1, fontFamily: 'var(--mono)', color: 'var(--cream)' }}
+                          style={{ flex: 1, fontFamily: 'var(--mono)', color: 'var(--ink)' }}
                         />
                       ) : (
                         <span className="li-name">{env.name}</span>
@@ -138,9 +143,9 @@ export default function EnvironmentsView({
                       <span className="li-meta">{Object.keys(env.vars).length}</span>
                       <div className="li-actions">
                         <button
-                          className={`icon-btn`}
+                          className="icon-btn"
                           title={isActive ? 'Active' : 'Set active'}
-                          style={isActive ? { color: 'var(--acid)' } : undefined}
+                          style={isActive ? { color: 'var(--ok)' } : undefined}
                           onClick={e => {
                             e.stopPropagation();
                             onSetActive(isActive ? null : env.id);
@@ -181,30 +186,28 @@ export default function EnvironmentsView({
           <div>
             {!current ? (
               <div className="empty-state" style={{ paddingTop: 0 }}>
-                <span className="label">select an environment</span>
-                <div className="title">
-                  Define <em>{`{{vars}}`}</em> that resolve at request time.
-                </div>
+                <span className="label">Select an environment</span>
+                <div className="title">Define {`{{vars}}`} that resolve at request time.</div>
                 <span style={{ fontSize: 12.5 }}>
-                  Example: <code style={{ color: 'var(--acid)' }}>{`{{baseUrl}}/v1/users`}</code> reads <code style={{ color: 'var(--acid)' }}>baseUrl</code> from the active environment.
+                  Example: <code style={{ fontFamily: 'var(--mono)', color: 'var(--ink)' }}>{`{{baseUrl}}/v1/users`}</code> reads <code style={{ fontFamily: 'var(--mono)', color: 'var(--ink)' }}>baseUrl</code> from the active environment.
                 </span>
               </div>
             ) : (
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span className="label-mono">variables for {current.name}</span>
+                  <span className="label-mono">Variables for {current.name}</span>
                   {current.id === activeId ? (
-                    <span className="chip acid">active</span>
+                    <span className="chip ok">Active</span>
                   ) : (
-                    <button className="btn sm outline-acid" onClick={() => onSetActive(current.id)}>
+                    <button className="btn sm outline" onClick={() => onSetActive(current.id)}>
                       Set active
                     </button>
                   )}
                 </div>
 
                 <div className="kv-row" style={{ marginBottom: 6 }}>
-                  <span className="label-mono">key</span>
-                  <span className="label-mono">value</span>
+                  <span className="label-mono">Key</span>
+                  <span className="label-mono">Value</span>
                   <span />
                 </div>
                 {rows.map((row, idx) => (

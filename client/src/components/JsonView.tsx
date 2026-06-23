@@ -14,13 +14,14 @@ function escapeHtml(s: string): string {
 }
 
 function highlight(text: string): string {
+  let pretty = text;
   try {
     const parsed = JSON.parse(text);
-    text = JSON.stringify(parsed, null, 2);
+    pretty = JSON.stringify(parsed, null, 2);
   } catch {
     return escapeHtml(text);
   }
-  const escaped = escapeHtml(text);
+  const escaped = escapeHtml(pretty);
   return escaped.replace(
     /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(\.\d+)?([eE][+\-]?\d+)?)/g,
     match => {

@@ -21,24 +21,24 @@ export default function TestRunSummary({ total, passed, failed, skipped, onRunAl
   const failDash = total === 0 ? 0 : (failed / total) * c;
 
   return (
-    <div className="card spec" data-spec="D · summary">
+    <div className="card has-divider">
       <div className="card-header">
-        <h3>Run Summary</h3>
+        <h3>Run summary</h3>
         <button className="btn primary sm" onClick={onRunAll} disabled={running || total === 0}>
           {running ? <span className="spinner" /> : <I.Play size={11} />}
-          Run All
+          Run all
         </button>
       </div>
-      <div className="card-body">
+      <div className="card-body" style={{ paddingTop: 16 }}>
         <div className="summary">
           <svg className="chart" viewBox={`0 0 ${size} ${size}`}>
-            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--rule)" strokeWidth={stroke} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={stroke} />
             <circle
               cx={size / 2}
               cy={size / 2}
               r={r}
               fill="none"
-              stroke="var(--mint)"
+              stroke="var(--ok)"
               strokeWidth={stroke}
               strokeDasharray={`${passDash} ${c}`}
               strokeDashoffset={0}
@@ -49,7 +49,7 @@ export default function TestRunSummary({ total, passed, failed, skipped, onRunAl
               cy={size / 2}
               r={r}
               fill="none"
-              stroke="var(--coral)"
+              stroke="var(--err)"
               strokeWidth={stroke}
               strokeDasharray={`${failDash} ${c}`}
               strokeDashoffset={-passDash}
@@ -57,16 +57,15 @@ export default function TestRunSummary({ total, passed, failed, skipped, onRunAl
             />
             <text
               x={size / 2}
-              y={size / 2 - 4}
+              y={size / 2 - 2}
               textAnchor="middle"
               dominantBaseline="middle"
-              fontFamily="Fraunces, serif"
-              fontStyle="italic"
-              fontSize="26"
-              fontWeight="500"
-              fill="var(--cream)"
+              fontFamily="Inter, sans-serif"
+              fontSize="22"
+              fontWeight="700"
+              fill="var(--ink)"
             >
-              {pct}
+              {pct}%
             </text>
             <text
               x={size / 2}
@@ -77,29 +76,29 @@ export default function TestRunSummary({ total, passed, failed, skipped, onRunAl
               letterSpacing="2"
               fill="var(--mute)"
             >
-              PCT
+              PASSED
             </text>
           </svg>
           <div className="stats">
             <div className="row">
-              <span className="swatch" style={{ background: 'var(--cream-2)' }} />
+              <span className="swatch" style={{ background: 'var(--ink)' }} />
               <span className="label">Total</span>
-              <span className="value">{total.toString().padStart(2, '0')}</span>
+              <span className="value">{total}</span>
             </div>
             <div className="row">
-              <span className="swatch" style={{ background: 'var(--mint)' }} />
+              <span className="swatch" style={{ background: 'var(--ok)' }} />
               <span className="label">Passed</span>
-              <span className="value" style={{ color: 'var(--mint)' }}>{passed.toString().padStart(2, '0')}</span>
+              <span className="value" style={{ color: 'var(--ok)' }}>{passed}</span>
             </div>
             <div className="row">
-              <span className="swatch" style={{ background: 'var(--coral)' }} />
+              <span className="swatch" style={{ background: 'var(--err)' }} />
               <span className="label">Failed</span>
-              <span className="value" style={{ color: 'var(--coral)' }}>{failed.toString().padStart(2, '0')}</span>
+              <span className="value" style={{ color: 'var(--err)' }}>{failed}</span>
             </div>
             <div className="row">
-              <span className="swatch" style={{ background: 'var(--rule-strong)' }} />
-              <span className="label">Skipped</span>
-              <span className="value" style={{ color: 'var(--mute-2)' }}>{skipped.toString().padStart(2, '0')}</span>
+              <span className="swatch" style={{ background: 'var(--line-strong)' }} />
+              <span className="label">Pending</span>
+              <span className="value" style={{ color: 'var(--mute)' }}>{skipped}</span>
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ interface Props {
   sending: boolean;
 }
 
-const TABS = ['Response', 'Headers', 'Cookies', 'Notes'] as const;
+const TABS = ['Response', 'Headers', 'Cookies'] as const;
 type Tab = typeof TABS[number];
 
 function statusClass(status: number): string {
@@ -23,41 +23,57 @@ function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
 }
 
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
+}
+
 export default function ResponsePanel({ response, sending }: Props) {
   const [tab, setTab] = useState<Tab>('Response');
 
   return (
-    <div className="card spec" data-spec="B · response">
+    <div className="card has-divider">
       <div className="card-header">
-        <h3>Response</h3>
-        {response && !response.error && (
-          <div className="resp-meta">
-            <span className={`chip ${statusClass(response.status)}`}>
-              {response.status} {response.statusText}
-            </span>
-            <span className="chip">{response.duration} ms</span>
-            <span className="chip">{formatBytes(response.size)}</span>
-          </div>
-        )}
-        {response?.error && (
-          <div className="resp-meta">
-            <span className="chip err">Error</span>
-            <span className="chip">{response.duration} ms</span>
-          </div>
+        <h3>
+          <span className="label-mono" style={{ letterSpacing: '0.18em', color: 'var(--mute)' }}>RESPONSE</span>
+          {response && !response.error && (
+            <>
+              <span className={`chip ${statusClass(response.status)}`}>
+                {response.status} {response.statusText}
+              </span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute)' }}>
+                {formatDuration(response.duration)}
+              </span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute)' }}>
+                {formatBytes(response.size)}
+              </span>
+            </>
+          )}
+          {response?.error && (
+            <>
+              <span className="chip err">Error</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--mute)' }}>
+                {formatDuration(response.duration)}
+              </span>
+            </>
+          )}
+        </h3>
+        {response && (
+          <span className="dot-status">{response.error ? 'Failed' : 'Complete'}</span>
         )}
       </div>
-      <div className="card-body">
+      <div className="card-body" style={{ paddingTop: 16 }}>
         {sending && (
-          <div className="empty-state" style={{ paddingTop: 8 }}>
+          <div className="empty-state" style={{ paddingTop: 0 }}>
             <span className="spinner" />
-            <span className="label">awaiting response…</span>
+            <span className="label">Awaiting response…</span>
           </div>
         )}
 
         {!sending && !response && (
           <div className="empty-state" style={{ paddingTop: 0 }}>
-            <span className="label">no response yet</span>
-            <div className="title">Send a request to see what comes <em>back</em>.</div>
+            <span className="label">No response yet</span>
+            <div className="title">Send a request to see the response here.</div>
           </div>
         )}
 
@@ -71,7 +87,7 @@ export default function ResponsePanel({ response, sending }: Props) {
 
             {tab === 'Response' && (
               response.error ? (
-                <pre className="code-block" style={{ color: 'var(--coral)' }}>{response.error}</pre>
+                <pre className="code-block" style={{ color: 'var(--err)' }}>{response.error}</pre>
               ) : (
                 <JsonView text={response.body} />
               )
@@ -82,25 +98,14 @@ export default function ResponsePanel({ response, sending }: Props) {
             )}
 
             {tab === 'Cookies' && (
-              <div className="empty-state" style={{ paddingTop: 0 }}>
-                {response.headers['set-cookie'] ? (
-                  <pre className="code-block">{response.headers['set-cookie']}</pre>
-                ) : (
-                  <>
-                    <span className="label">empty</span>
-                    <span style={{ fontSize: 12.5 }}>No cookies set by this response.</span>
-                  </>
-                )}
-              </div>
-            )}
-
-            {tab === 'Notes' && (
-              <div className="empty-state" style={{ paddingTop: 0 }}>
-                <span className="label">notes</span>
-                <span style={{ fontSize: 12.5 }}>
-                  Run a test case from the right panel to capture assertions.
-                </span>
-              </div>
+              response.headers['set-cookie'] ? (
+                <pre className="code-block">{response.headers['set-cookie']}</pre>
+              ) : (
+                <div className="empty-state" style={{ paddingTop: 0 }}>
+                  <span className="label">Empty</span>
+                  <span style={{ fontSize: 12.5 }}>No cookies set by this response.</span>
+                </div>
+              )
             )}
           </>
         )}

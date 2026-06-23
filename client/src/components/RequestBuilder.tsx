@@ -8,8 +8,6 @@ export interface RequestState {
   params: Record<string, string>;
   body: string;
   auth: string;
-  preScript: string;
-  tests: string;
 }
 
 interface Props {
@@ -20,7 +18,7 @@ interface Props {
 }
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
-const TABS = ['Body', 'Params', 'Headers', 'Auth', 'Pre-request', 'Tests'] as const;
+const TABS = ['Body', 'Params', 'Headers', 'Auth'] as const;
 type Tab = typeof TABS[number];
 
 function kvToEntries(kv: Record<string, string>): { k: string; v: string }[] {
@@ -35,6 +33,11 @@ function entriesToKv(entries: { k: string; v: string }[]): Record<string, string
   return out;
 }
 
+function lineCount(text: string): number {
+  if (!text) return 0;
+  return text.split(/\n/).length;
+}
+
 export default function RequestBuilder({ state, onChange, onSend, sending }: Props) {
   const [tab, setTab] = useState<Tab>('Body');
 
@@ -43,7 +46,7 @@ export default function RequestBuilder({ state, onChange, onSend, sending }: Pro
       const parsed = JSON.parse(state.body);
       onChange({ ...state, body: JSON.stringify(parsed, null, 2) });
     } catch {
-      // no-op
+      /* invalid JSON — leave as-is */
     }
   };
 
@@ -64,32 +67,44 @@ export default function RequestBuilder({ state, onChange, onSend, sending }: Pro
     onChange({ ...state, [kind]: entriesToKv(next) } as RequestState);
   };
 
+  const tabMeta: Record<Tab, string> = {
+    Body: `${lineCount(state.body)} lines`,
+    Params: `${Object.keys(state.params).length} keys`,
+    Headers: `${Object.keys(state.headers).length} keys`,
+    Auth: state.auth ? 'set' : 'none',
+  };
+
   return (
-    <div className="card spec" data-spec="A · request">
+    <div className="card has-divider">
       <div className="card-header">
-        <h3>Request Specimen</h3>
-        <span className="h-meta">draft / live</span>
+        <h3>
+          Request
+          <span className="dot-status idle">Ready</span>
+        </h3>
       </div>
-      <div className="card-body">
-        <div className="req-row">
-          <select
-            className="method-select"
-            value={state.method}
-            onChange={e => onChange({ ...state, method: e.target.value })}
-          >
-            {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+      <div className="card-body" style={{ paddingTop: 16 }}>
+        <div className="req-bar">
+          <div className="method-wrap">
+            <select
+              className={`method-select ${state.method.toUpperCase()}`}
+              value={state.method}
+              onChange={e => onChange({ ...state, method: e.target.value })}
+            >
+              {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
           <input
             className="url-input"
             value={state.url}
             onChange={e => onChange({ ...state, url: e.target.value })}
-            placeholder="https://api.acme.com/v1/users · supports {{vars}}"
+            placeholder="https://api.example.com/v1/resource"
+            spellCheck={false}
             onKeyDown={e => {
               if (e.key === 'Enter' && !sending) onSend();
             }}
           />
-          <button className="btn primary" onClick={onSend} disabled={sending || !state.url.trim()}>
-            {sending ? <span className="spinner" /> : <I.Send />}
+          <button className="send-btn" onClick={onSend} disabled={sending || !state.url.trim()}>
+            {sending ? <span className="spinner" /> : <I.Play size={11} />}
             Send
           </button>
         </div>
@@ -101,8 +116,6 @@ export default function RequestBuilder({ state, onChange, onSend, sending }: Pro
               Params: Object.keys(state.params).length,
               Headers: Object.keys(state.headers).length,
               Auth: state.auth ? 1 : 0,
-              'Pre-request': state.preScript ? 1 : 0,
-              Tests: state.tests ? 1 : 0,
             };
             const c = counts[t];
             return (
@@ -111,6 +124,7 @@ export default function RequestBuilder({ state, onChange, onSend, sending }: Pro
               </button>
             );
           })}
+          <span className="tabs-meta">{tabMeta[tab]}</span>
         </div>
 
         {tab === 'Params' && (
@@ -136,8 +150,8 @@ export default function RequestBuilder({ state, onChange, onSend, sending }: Pro
         {tab === 'Body' && (
           <>
             <div className="editor-toolbar">
-              <span>json body</span>
-              <button className="btn sm ghost" onClick={beautify}>Beautify</button>
+              <span>JSON body</span>
+              <button className="btn xs ghost" onClick={beautify}>Beautify</button>
             </div>
             <textarea
               className="json-editor"
@@ -150,36 +164,20 @@ export default function RequestBuilder({ state, onChange, onSend, sending }: Pro
         )}
 
         {tab === 'Auth' && (
-          <textarea
-            className="json-editor"
-            value={state.auth}
-            spellCheck={false}
-            onChange={e => onChange({ ...state, auth: e.target.value })}
-            placeholder="Bearer {{token}} — sent as Authorization header"
-            style={{ minHeight: 120 }}
-          />
-        )}
-
-        {tab === 'Pre-request' && (
-          <textarea
-            className="json-editor"
-            value={state.preScript}
-            spellCheck={false}
-            onChange={e => onChange({ ...state, preScript: e.target.value })}
-            placeholder="// Pre-request script (stub — for future scripting)"
-            style={{ minHeight: 120 }}
-          />
-        )}
-
-        {tab === 'Tests' && (
-          <textarea
-            className="json-editor"
-            value={state.tests}
-            spellCheck={false}
-            onChange={e => onChange({ ...state, tests: e.target.value })}
-            placeholder="// Notes / pseudocode for assertions"
-            style={{ minHeight: 120 }}
-          />
+          <>
+            <div className="editor-toolbar">
+              <span>Authorization header</span>
+              <span style={{ color: 'var(--mute)' }}>raw value, e.g. Bearer {'{{token}}'}</span>
+            </div>
+            <textarea
+              className="json-editor"
+              value={state.auth}
+              spellCheck={false}
+              onChange={e => onChange({ ...state, auth: e.target.value })}
+              placeholder="Bearer eyJhbGc... — sent as Authorization header"
+              style={{ minHeight: 96 }}
+            />
+          </>
         )}
       </div>
     </div>
@@ -202,8 +200,8 @@ function KvEditor({
   return (
     <div>
       <div className="kv-row" style={{ marginBottom: 6 }}>
-        <span className="label-mono">key</span>
-        <span className="label-mono">value</span>
+        <span className="label-mono">Key</span>
+        <span className="label-mono">Value</span>
         <span />
       </div>
       {entries.map((row, idx) => (

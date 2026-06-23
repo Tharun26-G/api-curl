@@ -46,8 +46,7 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="section-label">
-        <span>Workspace</span>
-        <span style={{ color: 'var(--cream-2)' }}>·01</span>
+        <span>Navigate</span>
       </div>
       <div className="nav">
         {NAV.map(({ key, label, Icon }) => (
@@ -58,7 +57,7 @@ export default function Sidebar({
           >
             <Icon />
             <span>{label}</span>
-            {counts[key] > 0 && <span className="num">{counts[key].toString().padStart(2, '0')}</span>}
+            {counts[key] > 0 && <span className="num">{counts[key]}</span>}
           </div>
         ))}
       </div>
@@ -70,7 +69,7 @@ export default function Sidebar({
             <span className={`status-dot ${dotClass}`}>{label}</span>
           </h5>
           <div className="field" style={{ marginBottom: 8 }}>
-            <label>endpoint</label>
+            <label>Endpoint</label>
             <input
               value={config.url}
               onChange={e => onConfigChange({ ...config, url: e.target.value })}
@@ -78,7 +77,7 @@ export default function Sidebar({
             />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>model</label>
+            <label>Model</label>
             {models.length > 0 ? (
               <select
                 value={config.model}

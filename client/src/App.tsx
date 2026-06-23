@@ -17,7 +17,6 @@ import RequestBuilder, { RequestState } from './components/RequestBuilder';
 import ResponsePanel from './components/ResponsePanel';
 import TestCasePanel from './components/TestCasePanel';
 import TestRunSummary from './components/TestRunSummary';
-import FlowDiagram from './components/FlowDiagram';
 import CurlModal from './components/CurlModal';
 import GenerateModal from './components/GenerateModal';
 import CollectionsView from './components/CollectionsView';
@@ -28,13 +27,11 @@ import { downloadCSV, testCasesToCSV } from './csv';
 
 const DEFAULT_REQUEST: RequestState = {
   method: 'POST',
-  url: 'https://api.acme.com/v1/users',
+  url: 'https://api.acme.co/v1/users',
   headers: { 'Content-Type': 'application/json' },
   params: {},
   body: JSON.stringify({ name: 'Olivia Park', role: 'designer' }, null, 2),
   auth: '',
-  preScript: '',
-  tests: '',
 };
 
 function randomId() {
@@ -63,34 +60,27 @@ function mergeAuth(headers: Record<string, string>, auth: string): Record<string
   return { ...headers, Authorization: trimmed };
 }
 
-function pageTitle(active: SidebarKey): { kicker: string; head: JSX.Element } {
+function pageTitle(active: SidebarKey): { title: string; sub: string } {
   switch (active) {
     case 'request':
-      return {
-        kicker: 'workspace / request',
-        head: <h1>The <em>request</em>, observed.</h1>,
-      };
+      return { title: 'Request', sub: 'Build, send, and inspect a single API call.' };
     case 'tests':
-      return {
-        kicker: 'workspace / test cases',
-        head: <h1>A <em>specimen</em> of test cases.</h1>,
-      };
+      return { title: 'Test cases', sub: 'Generated assertions and run history.' };
     case 'collections':
-      return {
-        kicker: 'workspace / collections',
-        head: <h1>Save what you <em>plan</em> to repeat.</h1>,
-      };
+      return { title: 'Collections', sub: 'Save and reuse named requests.' };
     case 'environments':
-      return {
-        kicker: 'workspace / environments',
-        head: <h1>Variables that <em>resolve</em> at send-time.</h1>,
-      };
+      return { title: 'Environments', sub: 'Variables substituted into URLs, headers, and bodies.' };
   }
 }
 
 export default function App() {
   const [activeNav, setActiveNav] = useState<SidebarKey>('request');
-  const [request, setRequest] = useState<RequestState>(() => loadJSON('request', DEFAULT_REQUEST));
+  const [request, setRequest] = useState<RequestState>(() => {
+    const raw = loadJSON<any>('request', DEFAULT_REQUEST);
+    // Migrate from older shape that included preScript/tests
+    const { preScript: _p, tests: _t, ...clean } = raw || {};
+    return { ...DEFAULT_REQUEST, ...clean };
+  });
   const [response, setResponse] = useState<ResponseData | null>(null);
   const [sending, setSending] = useState(false);
 
@@ -122,7 +112,6 @@ export default function App() {
     toastTimer.current = window.setTimeout(() => setToast(null), 3500);
   }, []);
 
-  // Persistence
   useEffect(() => { saveJSON('request', request); }, [request]);
   useEffect(() => { saveJSON('testCases', testCases); }, [testCases]);
   useEffect(() => { saveJSON('collections', collections); }, [collections]);
@@ -130,7 +119,6 @@ export default function App() {
   useEffect(() => { saveJSON('activeEnv', activeEnvId); }, [activeEnvId]);
   useEffect(() => { saveJSON('ollama', config); }, [config]);
 
-  // Ollama config sync (server-side env)
   useEffect(() => {
     api.getConfig().then(srv => {
       const stored = loadJSON<OllamaConfig | null>('ollama', null as any);
@@ -353,8 +341,6 @@ export default function App() {
         params: {},
         body: first.body || '',
         auth: '',
-        preScript: '',
-        tests: '',
       });
       if (parsed.length > 1) {
         const extras: TestCase[] = parsed.slice(1).map(tc => ({ ...tc, id: randomId() }));
@@ -401,8 +387,6 @@ export default function App() {
         params: request.params,
         body: request.body,
         auth: request.auth,
-        preScript: request.preScript,
-        tests: request.tests,
         updatedAt: Date.now(),
       };
       setCollections(prev =>
@@ -420,8 +404,6 @@ export default function App() {
       params: req.params,
       body: req.body,
       auth: req.auth,
-      preScript: req.preScript,
-      tests: req.tests,
     });
     setActiveNav('request');
     showToast(`Loaded "${req.name}"`);
@@ -497,9 +479,12 @@ export default function App() {
         <div className="main">
           <div className="center">
             <div className="page-head">
-              {title.head}
+              <div>
+                <h1>{title.title}</h1>
+                <div className="sub">{title.sub}</div>
+              </div>
               <span className="crumb">
-                {title.kicker} <b style={{ color: 'var(--acid)' }}>·</b> {activeEnv ? <span>env <b>{activeEnv.name}</b></span> : 'no env'}
+                {activeEnv ? <>env <b>{activeEnv.name}</b></> : 'no env'}
               </span>
             </div>
 
@@ -554,8 +539,6 @@ export default function App() {
                 onUpdateVars={handleUpdateVars}
               />
             )}
-
-            <FlowDiagram />
           </div>
 
           <div className="right">

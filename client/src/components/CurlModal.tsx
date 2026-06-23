@@ -17,20 +17,17 @@ export default function CurlModal({ open, onClose, onImport, loading }: Props) {
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <span className="label-mono">action / import</span>
-            <h3>Paste a <em>cURL</em> command</h3>
+            <h3>Import cURL</h3>
+            <div className="sub">Method, URL, headers, and body will be parsed into the builder.</div>
           </div>
           <button className="icon-btn" onClick={onClose}><I.X /></button>
         </div>
         <div className="modal-body">
-          <p style={{ fontSize: 12.5, color: 'var(--mute-2)', marginBottom: 10 }}>
-            Method, URL, headers, and body will be parsed into the builder.
-          </p>
           <textarea
             className="json-editor"
             value={value}
             onChange={e => setValue(e.target.value)}
-            placeholder={`curl -X POST https://api.acme.com/v1/users \\\n  -H "Content-Type: application/json" \\\n  -d '{"name":"Olivia Park","role":"designer"}'`}
+            placeholder={`curl -X POST https://api.acme.co/v1/users \\\n  -H "Content-Type: application/json" \\\n  -d '{"name":"Olivia Park","role":"designer"}'`}
             style={{ minHeight: 220 }}
             spellCheck={false}
           />
@@ -42,7 +39,7 @@ export default function CurlModal({ open, onClose, onImport, loading }: Props) {
             onClick={() => value.trim() && onImport(value.trim())}
             disabled={loading || !value.trim()}
           >
-            {loading ? <span className="spinner" /> : <I.Import />}
+            {loading ? <span className="spinner" /> : <I.Import size={14} />}
             Parse &amp; Load
           </button>
         </div>
