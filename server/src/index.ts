@@ -6,8 +6,9 @@ import routes from './routes';
 const app = express();
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const CLIENT_URL = process.env.CLIENT_URL || undefined;
 
-app.use(cors());
+app.use(cors(CLIENT_URL ? { origin: CLIENT_URL } : undefined));
 app.use(express.json({ limit: '10mb' }));
 
 app.use('/api', routes);

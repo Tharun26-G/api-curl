@@ -1,6 +1,9 @@
 import { TestCase, TestResult, OllamaConfig, OllamaStatus, ResponseData } from '../types';
 
-const BASE = '/api';
+// If VITE_API_URL is set (production), use that as the backend base (append /api).
+// Otherwise fall back to the dev proxy path `/api` which Vite forwards to the server.
+const API_URL = (import.meta.env.VITE_API_URL as string) || '';
+const BASE = API_URL ? `${API_URL.replace(/\/$/, '')}/api` : '/api';
 
 async function asJson<T>(res: Response): Promise<T> {
   const data = await res.json();
