@@ -17,10 +17,23 @@ export default defineConfig(({ mode }) => {
         }
       : undefined;
 
+  const appUrl = env.VITE_APP_URL || 'http://localhost:5173';
+  let clientPort = 5173;
+  try {
+    const parsedUrl = new URL(appUrl);
+    if (parsedUrl.port) {
+      clientPort = Number(parsedUrl.port);
+    } else {
+      clientPort = parsedUrl.protocol === 'https:' ? 443 : 80;
+    }
+  } catch (e) {
+    // fallback
+  }
+
   return {
     plugins: [react()],
     server: {
-      port: Number(env.VITE_PORT) || 5173,
+      port: clientPort,
       proxy,
     },
   };
