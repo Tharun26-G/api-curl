@@ -80,7 +80,7 @@ function analyzeFields(obj: any, basePath = '', acc: FieldDescriptor[] = []): Fi
   return acc;
 }
 
-interface RequestProfile {
+export interface RequestProfile {
   method: string;
   url: string;
   hasBody: boolean;
@@ -94,7 +94,7 @@ interface RequestProfile {
   semantics: string[];
 }
 
-function profileRequest(spec: RequestSpec): RequestProfile {
+export function profileRequest(spec: RequestSpec): RequestProfile {
   const method = (spec.method || 'GET').toUpperCase();
   const url = spec.url || '';
   let resource = '';
@@ -179,7 +179,7 @@ function categoryPlaybook(): string {
   ].join('\n');
 }
 
-function buildPrompt(spec: RequestSpec, opts: GenerateOptions): string {
+export function buildPrompt(spec: RequestSpec, opts: GenerateOptions): string {
   const profile = profileRequest(spec);
   const counts = opts.counts || {};
   const lines: string[] = [];
@@ -269,7 +269,7 @@ function buildPrompt(spec: RequestSpec, opts: GenerateOptions): string {
   return lines.join('\n');
 }
 
-interface OllamaGenerated {
+export interface OllamaGenerated {
   name?: string;
   category?: string;
   method?: string;
@@ -283,7 +283,7 @@ interface OllamaGenerated {
   assertions?: any;
 }
 
-function extractJsonArray(text: string): any[] | null {
+export function extractJsonArray(text: string): any[] | null {
   if (!text) return null;
   const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const candidate = fenceMatch ? fenceMatch[1] : text;
@@ -377,7 +377,7 @@ function normalizeSteps(steps: string[] | string | undefined): string[] | undefi
   return undefined;
 }
 
-function fromOllama(items: OllamaGenerated[], spec: RequestSpec): TestCase[] {
+export function fromOllama(items: OllamaGenerated[], spec: RequestSpec): TestCase[] {
   return items
     .map(item => {
       const method = (item.method || spec.method || 'GET').toUpperCase();
@@ -413,7 +413,7 @@ function summarizeBody(body: string | null): string {
   return body;
 }
 
-function defaultSteps(spec: RequestSpec, mutation: string): string[] {
+export function defaultSteps(spec: RequestSpec, mutation: string): string[] {
   return [
     `Set HTTP method to ${spec.method.toUpperCase()}`,
     `Set request URL to ${spec.url}`,
@@ -573,7 +573,7 @@ function securityPayloads(kind: FieldKind): { label: string; value: any }[] {
   return stringVectors;
 }
 
-function buildDeterministicCase(
+export function buildDeterministicCase(
   spec: RequestSpec,
   category: TestCategory,
   variant: number,
@@ -949,7 +949,7 @@ function buildDeterministicCase(
   }
 }
 
-function deterministicCases(spec: RequestSpec, opts: GenerateOptions): TestCase[] {
+export function deterministicCases(spec: RequestSpec, opts: GenerateOptions): TestCase[] {
   const profile = profileRequest(spec);
   const counts = opts.counts || {};
   const out: TestCase[] = [];

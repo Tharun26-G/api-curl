@@ -127,8 +127,8 @@ export default function App() {
   }, []);
 
   const refreshStatus = useCallback(() => {
-    api.getOllamaStatus().then(setOllamaStatus).catch(() => setOllamaStatus({ connected: false }));
-  }, []);
+    api.getOllamaStatus(config.url).then(setOllamaStatus).catch(() => setOllamaStatus({ connected: false }));
+  }, [config.url]);
 
   useEffect(() => {
     refreshStatus();
@@ -182,12 +182,15 @@ export default function App() {
       }
       setGenerating(true);
       try {
-        const result = await api.generateCases({
-          ...buildSendArgs(),
-          counts: counts as Record<string, number>,
-          customPrompt,
-          customCount,
-        });
+        const result = await api.generateCases(
+          {
+            ...buildSendArgs(),
+            counts: counts as Record<string, number>,
+            customPrompt,
+            customCount,
+          },
+          config
+        );
         setTestCases(prev => [...result.cases, ...prev]);
         setResults({});
         setActiveNav('tests');

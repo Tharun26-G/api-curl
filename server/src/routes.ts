@@ -2,9 +2,19 @@ import { Router, Request, Response } from 'express';
 import fetch from 'node-fetch';
 import { parseMultipleCurls } from './curlParser';
 import { runTestCase, runRequest } from './runner';
-import { generateCases } from './aiGenerator';
+import {
+  generateCases,
+  buildPrompt,
+  extractJsonArray,
+  fromOllama,
+  profileRequest,
+  buildDeterministicCase,
+  defaultSteps,
+  OllamaGenerated,
+  deterministicCases
+} from './aiGenerator';
 import { getConfig, updateConfig } from './config';
-import { TestCase } from './types';
+import { TestCase, TestCategory } from './types';
 
 const router = Router();
 
@@ -171,6 +181,110 @@ router.post('/config', (req: Request, res: Response) => {
   if (isString(model) && model.trim().length > 0) patch.model = model.trim();
   const updated = updateConfig(patch);
   res.json({ config: updated });
+});
+
+router.post('/ai/build-prompt', (req: Request, res: Response) => {
+  const { spec, opts } = req.body || {};
+  if (!spec || !isString(spec.url)) {
+    res.status(400).json({ error: 'Request spec with url is required' });
+    return;
+  }
+  try {
+    const prompt = buildPrompt(spec, opts || {});
+    res.json({ prompt });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Failed to build prompt' });
+  }
+});
+
+router.post('/ai/parse-cases', (req: Request, res: Response) => {
+  const { spec, opts, responseText } = req.body || {};
+  if (!spec || !isString(spec.url)) {
+    res.status(400).json({ error: 'Request spec with url is required' });
+    return;
+  }
+
+  function randomId(): string {
+    return Math.random().toString(36).substring(2, 10);
+  }
+
+  try {
+    const arr = extractJsonArray(responseText || '');
+    if (!arr || arr.length === 0) {
+      const fallback = deterministicCases(spec, opts || {});
+      res.json({ cases: fallback, source: 'fallback', note: 'Model returned no parseable cases' });
+      return;
+    }
+
+    const cases = fromOllama(arr as OllamaGenerated[], spec);
+    if (cases.length === 0) {
+      const fallback = deterministicCases(spec, opts || {});
+      res.json({ cases: fallback, source: 'fallback', note: 'No valid cases extracted' });
+      return;
+    }
+
+    // Top up with deterministic cases per category if Ollama under-delivered.
+    const haveByCat: Partial<Record<TestCategory, number>> = {};
+    for (const c of cases) haveByCat[c.category] = (haveByCat[c.category] || 0) + 1;
+    const supplements: TestCase[] = [];
+    const profile = profileRequest(spec);
+    const deterministicCategories: TestCategory[] = [
+      'positive',
+      'negative',
+      'missing-field',
+      'empty',
+      'boundary',
+      'special-characters',
+      'security',
+      'large-payload',
+      'duplicate',
+    ];
+    for (const cat of deterministicCategories) {
+      const wanted = (opts.counts || {})[cat] || 0;
+      const have = haveByCat[cat] || 0;
+      const need = Math.max(0, wanted - have);
+      for (let i = 0; i < need; i++) {
+        const c = buildDeterministicCase(spec, cat, i, profile);
+        if (c) supplements.push(c);
+      }
+    }
+
+    if (opts.customPrompt && (opts.customCount || 0) > (haveByCat['custom'] || 0)) {
+      const need = (opts.customCount as number) - (haveByCat['custom'] || 0);
+      for (let i = 0; i < need; i++) {
+        supplements.push({
+          id: randomId(),
+          name: `Verify custom scenario: ${opts.customPrompt.slice(0, 60)}${i > 0 ? ` (variant ${i + 1})` : ''}`,
+          category: 'custom',
+          method: spec.method,
+          url: spec.url,
+          headers: spec.headers,
+          body: spec.body,
+          expectedStatus: 200,
+          description: opts.customPrompt,
+          stepsToReproduce: defaultSteps(spec, `Apply the custom hint: ${opts.customPrompt}`),
+          expectedResult: 'API behaviour matches the described custom scenario.',
+          assertions: {
+            expectStatusClass: ['2xx', '4xx'],
+            disallowStatus: [500, 502, 503, 504],
+            maxResponseTimeMs: 5_000,
+          },
+        });
+      }
+    }
+
+    if (supplements.length === 0) {
+      res.json({ cases, source: 'ollama' });
+    } else {
+      res.json({
+        cases: [...cases, ...supplements],
+        source: 'mixed',
+        note: `Ollama returned ${cases.length}; topped up with ${supplements.length} deterministic case(s)`,
+      });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Failed to parse cases' });
+  }
 });
 
 export default router;

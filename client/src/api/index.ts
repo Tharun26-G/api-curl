@@ -46,7 +46,83 @@ export interface GenerateArgs extends SendArgs {
 
 export async function generateCases(
   args: GenerateArgs,
+  config?: OllamaConfig,
 ): Promise<{ cases: TestCase[]; source: 'ollama' | 'fallback' | 'mixed'; note?: string }> {
+  // If we have an Ollama configuration, try querying it directly from the client browser
+  // to avoid cloud deployment network blocks (e.g. Vercel backend blocking local access).
+  if (config && config.url) {
+    try {
+      // 1. Build the prompt using server-side logic
+      const promptRes = await fetch(`${BASE}/ai/build-prompt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spec: {
+            method: args.method,
+            url: args.url,
+            headers: args.headers,
+            body: args.body,
+          },
+          opts: {
+            counts: args.counts,
+            customPrompt: args.customPrompt,
+            customCount: args.customCount,
+          },
+        }),
+      });
+      const { prompt } = await asJson<{ prompt: string }>(promptRes);
+
+      // 2. Query the user's local/configured Ollama directly from their browser
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120_000); // 2 minute timeout
+
+      const ollamaRes = await fetch(`${config.url.replace(/\/$/, '')}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: config.model,
+          prompt,
+          stream: false,
+          options: { temperature: 0.35, top_p: 0.9 },
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!ollamaRes.ok) {
+        throw new Error(`Ollama returned HTTP status ${ollamaRes.status}`);
+      }
+
+      const ollamaData = await ollamaRes.json();
+      const responseText = ollamaData?.response || '';
+
+      // 3. Send raw Ollama response back to the server to parse and top up with deterministic cases
+      const parseRes = await fetch(`${BASE}/ai/parse-cases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spec: {
+            method: args.method,
+            url: args.url,
+            headers: args.headers,
+            body: args.body,
+          },
+          opts: {
+            counts: args.counts,
+            customPrompt: args.customPrompt,
+            customCount: args.customCount,
+          },
+          responseText,
+        }),
+      });
+
+      return asJson(parseRes);
+    } catch (err: any) {
+      console.warn('Direct client-side Ollama generation failed. Falling back to server-side:', err);
+    }
+  }
+
+  // Fallback: standard server-side generation
   const res = await fetch(`${BASE}/generate-cases`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -91,7 +167,27 @@ export async function updateConfig(config: Partial<OllamaConfig>): Promise<Ollam
   return data.config;
 }
 
-export async function getOllamaStatus(): Promise<OllamaStatus> {
+export async function getOllamaStatus(url?: string): Promise<OllamaStatus> {
+  if (url) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    try {
+      const res = await fetch(`${url.replace(/\/$/, '')}/api/tags`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) {
+        return { connected: false, error: `HTTP ${res.status}` };
+      }
+      const data = await res.json();
+      const models = Array.isArray(data?.models)
+        ? data.models.map((m: any) => m?.name).filter((n: any) => typeof n === 'string')
+        : [];
+      return { connected: true, models };
+    } catch (err: any) {
+      clearTimeout(timer);
+      return { connected: false, error: err?.name === 'AbortError' ? 'timeout' : err.message || 'unreachable' };
+    }
+  }
+
   const res = await fetch(`${BASE}/ollama-status`);
   return asJson(res);
 }
