@@ -184,7 +184,11 @@ export async function getOllamaStatus(url?: string): Promise<OllamaStatus> {
       return { connected: true, models };
     } catch (err: any) {
       clearTimeout(timer);
-      return { connected: false, error: err?.name === 'AbortError' ? 'timeout' : err.message || 'unreachable' };
+      const isLocal = url.includes('localhost') || url.includes('127.0.0.1');
+      const errorMsg = err?.name === 'AbortError'
+        ? 'Connection timeout'
+        : `${err.message || 'unreachable'}${isLocal ? ' (Tip: Run Ollama with OLLAMA_ORIGINS=* environment variable to enable CORS)' : ''}`;
+      return { connected: false, error: errorMsg };
     }
   }
 

@@ -96,6 +96,11 @@ export default function Sidebar({
               />
             )}
           </div>
+          {status.error && (
+            <div style={{ color: 'var(--err)', fontSize: '10.5px', marginTop: '8px', wordBreak: 'break-word', lineHeight: '1.3' }}>
+              {status.error}
+            </div>
+          )}
         </div>
       </div>
     </aside>
